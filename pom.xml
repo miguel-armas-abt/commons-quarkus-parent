@@ -26,6 +26,7 @@
 
     <mapstruct.version>1.6.0.Beta1</mapstruct.version>
     <lombok.version>1.18.26</lombok.version>
+    <jandex.maven.plugin.version>3.4.0</jandex.maven.plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -181,6 +182,19 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>io.smallrye</groupId>
+        <artifactId>jandex-maven-plugin</artifactId>
+        <version>${jandex.maven.plugin.version}</version>
+        <executions>
+          <execution><goals><goal>jandex</goal></goals></execution>
+        </executions>
+        <configuration><indexVersion>12</indexVersion>
+          <jar/>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 

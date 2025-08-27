@@ -8,7 +8,6 @@ import com.demo.poc.commons.core.errors.selector.ResponseErrorSelector;
 import com.demo.poc.commons.core.logging.ErrorThreadContextInjector;
 import com.demo.poc.commons.core.logging.enums.LoggingType;
 import com.demo.poc.commons.core.properties.ConfigurationBaseProperties;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.ProcessingException;
@@ -20,7 +19,6 @@ import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
 import java.util.stream.Collectors;
 
-@ApplicationScoped
 @RequiredArgsConstructor
 public class ErrorInterceptor {
 
