@@ -1,4 +1,4 @@
-package com.demo.poc.commons.core.config;
+package com.demo.poc.commons.core.config.mapper;
 
 import org.mapstruct.MapperConfig;
 import org.mapstruct.ReportingPolicy;
