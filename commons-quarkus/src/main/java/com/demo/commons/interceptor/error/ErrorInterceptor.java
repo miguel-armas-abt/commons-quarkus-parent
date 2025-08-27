@@ -1,0 +1,72 @@
+package com.demo.commons.interceptor.error;
+
+import com.demo.commons.constants.Symbol;
+import com.demo.commons.errors.exceptions.GenericException;
+import com.demo.commons.errors.exceptions.InvalidFieldException;
+import com.demo.commons.logging.ErrorThreadContextInjector;
+import com.demo.commons.properties.ConfigurationBaseProperties;
+import com.demo.commons.errors.dto.ErrorDto;
+import com.demo.commons.errors.selector.ResponseErrorSelector;
+import com.demo.commons.logging.enums.LoggingType;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import org.jboss.resteasy.reactive.RestResponse;
+import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
+
+import java.util.stream.Collectors;
+
+@RequiredArgsConstructor
+public class ErrorInterceptor {
+
+  private final ConfigurationBaseProperties properties;
+  private final ErrorThreadContextInjector contextInjector;
+  private final ResponseErrorSelector responseErrorSelector;
+
+  @ServerExceptionMapper
+  public RestResponse<ErrorDto> toResponse(Throwable throwable) {
+    boolean isLoggerPresent = LoggingType.isLoggerPresent(properties, LoggingType.ERROR);
+    if (isLoggerPresent) {
+      contextInjector.populateFromException(throwable);
+    }
+
+    ErrorDto error = ErrorDto.getDefaultError(properties);
+    Response.Status status = Response.Status.INTERNAL_SERVER_ERROR;
+
+    if (throwable instanceof WebApplicationException webApplicationException) {
+      status = Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
+    }
+
+    if (throwable instanceof ProcessingException) {
+      status = Response.Status.REQUEST_TIMEOUT;
+    }
+
+    if (throwable instanceof GenericException genericException) {
+      error = responseErrorSelector.toErrorDto(genericException);
+      status = genericException.getHttpStatus();
+    }
+
+    return RestResponse.status(status, error);
+  }
+
+  @ServerExceptionMapper
+  public RestResponse<ErrorDto> toResponse(ConstraintViolationException exception) {
+    contextInjector.populateFromException(exception);
+    String message = exception
+        .getConstraintViolations()
+        .stream()
+        .map(ConstraintViolation::getMessage)
+        .collect(Collectors.joining(Symbol.COMMA_WITH_SPACE));
+
+    ErrorDto error = ErrorDto.builder()
+        .code(InvalidFieldException.INVALID_FIELD_CODE)
+        .message(message)
+        .build();
+
+    Response.Status status = Response.Status.BAD_REQUEST;
+    return RestResponse.status(status, error);
+  }
+}

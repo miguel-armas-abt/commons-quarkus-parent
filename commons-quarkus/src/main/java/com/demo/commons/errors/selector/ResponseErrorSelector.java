@@ -1,0 +1,65 @@
+package com.demo.commons.errors.selector;
+
+import com.demo.commons.errors.dto.ErrorDto;
+import com.demo.commons.errors.exceptions.GenericException;
+import com.demo.commons.properties.ConfigurationBaseProperties;
+import com.demo.commons.properties.ProjectType;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Objects;
+import java.util.Optional;
+
+@RequiredArgsConstructor
+public class ResponseErrorSelector {
+
+  private final ConfigurationBaseProperties properties;
+
+  public <T extends Throwable> ErrorDto toErrorDto(T exception) {
+    ErrorDto error = extractError(exception);
+    String selectedCode = selectCustomCode(error);
+    error.setCode(selectedCode);
+
+    String selectedMessage = selectMessage(error);
+    error.setMessage(selectedMessage);
+
+    return error;
+  }
+
+  private String selectCustomCode(ErrorDto error) {
+    ProjectType projectType = selectProjectType();
+
+    return ProjectType.BFF.equals(projectType)
+        ? ErrorDto.CODE_DEFAULT
+        : Optional.ofNullable(error)
+        .map(ErrorDto::getCode)
+        .orElseGet(() -> ErrorDto.CODE_DEFAULT);
+  }
+
+  private String selectMessage(ErrorDto error) {
+    String defaultMessage = ErrorDto.getDefaultError(properties).getMessage();
+    ProjectType projectType = selectProjectType();
+
+    if(ProjectType.BFF.equals(projectType))
+      return defaultMessage;
+
+    return Optional.ofNullable(ErrorDto.getMatchMessage(properties, error.getCode()))
+        .orElseGet(() -> Optional.ofNullable(error.getMessage()).orElse(defaultMessage));
+  }
+
+  private ProjectType selectProjectType() {
+    return properties.projectType().orElseGet(() -> ProjectType.MS);
+  }
+
+  private static <T extends Throwable> ErrorDto extractError(T exception) {
+    ErrorDto error = null;
+
+    if (exception instanceof GenericException genericException) {
+      error = genericException.getErrorDetail();
+      if (Objects.nonNull(genericException.getMessage())) {
+        error.setMessage(genericException.getMessage());
+      }
+    }
+
+    return error;
+  }
+}
