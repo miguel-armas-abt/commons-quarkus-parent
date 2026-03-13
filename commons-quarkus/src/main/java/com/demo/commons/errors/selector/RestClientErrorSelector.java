@@ -6,20 +6,21 @@ import com.demo.commons.errors.dto.ErrorOrigin;
 import com.demo.commons.properties.ConfigurationBaseProperties;
 import com.demo.commons.properties.restclient.RestClient;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jboss.logging.Logger;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-@Slf4j
 @RequiredArgsConstructor
 public class RestClientErrorSelector {
 
   private static final String[] HTTP_ALLOWED_CODES = {"400", "401", "403", "404"};
   private static final int HTTP_CONFLICT_CODE = 409;
+
+  private static final Logger log = Logger.getLogger(RestClientErrorSelector.class);
 
   private final ConfigurationBaseProperties properties;
 

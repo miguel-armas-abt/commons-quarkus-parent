@@ -11,14 +11,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public enum LoggingType {
 
-  ERROR("error", "Error"),
-  REST_SERVER_REQ("rest.server.req", "REST server request"),
-  REST_SERVER_RES("rest.server.res", "REST server response"),
-  REST_CLIENT_REQ("rest.client.req", "REST client request"),
-  REST_CLIENT_RES("rest.client.res", "REST client response");
+  ERROR("error"),
+  REST_SERVER_REQ("rest.server.req"),
+  REST_SERVER_RES("rest.server.res"),
+  REST_CLIENT_REQ("rest.client.req"),
+  REST_CLIENT_RES("rest.client.res");
 
   private final String code;
-  private final String message;
 
   public static boolean isLoggerPresent(ConfigurationBaseProperties properties, LoggingType loggingType) {
     return properties.logging()

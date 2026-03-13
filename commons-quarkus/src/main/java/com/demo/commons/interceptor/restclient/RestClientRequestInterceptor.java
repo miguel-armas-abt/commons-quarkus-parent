@@ -1,24 +1,41 @@
 package com.demo.commons.interceptor.restclient;
 
-import com.demo.commons.logging.ThreadContextInjector;
-import com.demo.commons.logging.dto.RestRequestLog;
-import com.demo.commons.properties.ConfigurationBaseProperties;
-import com.demo.commons.restclient.utils.HeadersExtractor;
-import com.demo.commons.tracing.enums.TraceParam;
+import com.demo.commons.constants.Symbol;
 import com.demo.commons.logging.enums.LoggingType;
+import com.demo.commons.logging.obfuscation.ObfuscationTemplateProvider;
+import com.demo.commons.logging.obfuscation.body.BodyObfuscator;
+import com.demo.commons.logging.obfuscation.header.HeaderObfuscator;
+import com.demo.commons.logging.restclient.RestClientConstant;
+import com.demo.commons.properties.ConfigurationBaseProperties;
+import com.demo.commons.properties.logging.ObfuscationTemplate;
+import com.demo.commons.restclient.utils.HeadersExtractor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.json.JsonException;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.jboss.logging.Logger;
+import org.jboss.logging.MDC;
 
-import java.util.Map;
+import java.util.Optional;
 
-@Slf4j
-@RequiredArgsConstructor
 public class RestClientRequestInterceptor implements ClientRequestFilter {
 
   private final ConfigurationBaseProperties properties;
-  private final ThreadContextInjector contextInjector;
+  private final ObfuscationTemplate obfuscation;
+  private final ObjectMapper objectMapper;
+
+  public RestClientRequestInterceptor(
+      ConfigurationBaseProperties properties,
+      ObjectMapper objectMapper,
+      ObfuscationTemplateProvider provider) {
+
+    this.properties = properties;
+    this.objectMapper = objectMapper;
+    this.obfuscation = provider.get();
+  }
+
+  private static final Logger log = Logger.getLogger(RestClientRequestInterceptor.class);
 
   @Override
   public void filter(ClientRequestContext requestContext) {
@@ -28,18 +45,29 @@ public class RestClientRequestInterceptor implements ClientRequestFilter {
   private void generateTrace(ClientRequestContext requestContext) {
     boolean isLoggerPresent = LoggingType.isLoggerPresent(properties, LoggingType.REST_CLIENT_REQ);
     if (isLoggerPresent) {
-      Map<String, String> headers = HeadersExtractor.extractHeadersAsMap(requestContext.getHeaders());
+      String uri = requestContext.getUri().toString();
+      MDC.put(LoggingType.REST_CLIENT_REQ.getCode() + RestClientConstant.METHOD, requestContext.getMethod());
+      MDC.put(LoggingType.REST_CLIENT_REQ.getCode() + RestClientConstant.URI, uri);
 
-      RestRequestLog log = RestRequestLog.builder()
-          .method(requestContext.getMethod())
-          .uri(requestContext.getUri().toString())
-          .requestHeaders(headers)
-          .requestBody("{\"to\":\"do\"}")
-          .traceParent(headers.get(TraceParam.TRACE_PARENT.getKey()))
-          .build();
-      contextInjector.populateFromRestRequest(LoggingType.REST_CLIENT_REQ, log);
+      log.info("--> " + requestContext.getMethod() + Symbol.SPACE + uri);
+
+      Optional.ofNullable(HeadersExtractor.extractHeadersAsMap(requestContext.getHeaders()))
+          .ifPresent(headers -> log.info("Request headers --> " + HeaderObfuscator.process(obfuscation, headers)));
+
+      Optional.ofNullable(requestContext.getEntity())
+          .map(this::serializeJson)
+          .ifPresent(body -> log.info("Request body --> " + BodyObfuscator.process(obfuscation, body)));
     }
   }
 
+  private String serializeJson(Object payload) {
+    try {
+      return (payload instanceof String)
+          ? (String) payload
+          : objectMapper.writeValueAsString(payload);
+    } catch (JsonProcessingException exception) {
+      throw new JsonException(exception.getMessage());
+    }
+  }
 
 }

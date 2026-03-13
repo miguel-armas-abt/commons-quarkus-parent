@@ -1,19 +1,19 @@
 package com.demo.commons.interceptor.error;
 
 import com.demo.commons.constants.Symbol;
+import com.demo.commons.errors.dto.ErrorDto;
 import com.demo.commons.errors.exceptions.GenericException;
 import com.demo.commons.errors.exceptions.InvalidFieldException;
-import com.demo.commons.logging.ErrorThreadContextInjector;
-import com.demo.commons.properties.ConfigurationBaseProperties;
-import com.demo.commons.errors.dto.ErrorDto;
 import com.demo.commons.errors.selector.ResponseErrorSelector;
 import com.demo.commons.logging.enums.LoggingType;
+import com.demo.commons.properties.ConfigurationBaseProperties;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 
@@ -23,14 +23,15 @@ import java.util.stream.Collectors;
 public class ErrorInterceptor {
 
   private final ConfigurationBaseProperties properties;
-  private final ErrorThreadContextInjector contextInjector;
   private final ResponseErrorSelector responseErrorSelector;
+
+  private final static Logger log = Logger.getLogger(ErrorInterceptor.class);
 
   @ServerExceptionMapper
   public RestResponse<ErrorDto> toResponse(Throwable throwable) {
     boolean isLoggerPresent = LoggingType.isLoggerPresent(properties, LoggingType.ERROR);
     if (isLoggerPresent) {
-      contextInjector.populateFromException(throwable);
+      log.error(throwable.getMessage(), throwable);
     }
 
     ErrorDto error = ErrorDto.getDefaultError(properties);
@@ -54,7 +55,7 @@ public class ErrorInterceptor {
 
   @ServerExceptionMapper
   public RestResponse<ErrorDto> toResponse(ConstraintViolationException exception) {
-    contextInjector.populateFromException(exception);
+    log.error(exception.getMessage(), exception);
     String message = exception
         .getConstraintViolations()
         .stream()
