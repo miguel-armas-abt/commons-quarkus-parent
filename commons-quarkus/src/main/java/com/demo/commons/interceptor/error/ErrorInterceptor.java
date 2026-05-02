@@ -63,7 +63,7 @@ public class ErrorInterceptor {
         .collect(Collectors.joining(Symbol.COMMA_WITH_SPACE));
 
     ErrorDto error = ErrorDto.builder()
-        .code(InvalidFieldException.INVALID_FIELD_CODE)
+        .code(InvalidFieldException.ERROR_CODE)
         .message(message)
         .build();
 

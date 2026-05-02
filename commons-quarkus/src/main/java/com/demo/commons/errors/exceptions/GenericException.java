@@ -24,4 +24,14 @@ public class GenericException extends RuntimeException {
             .message(message)
             .build();
     }
+
+    public GenericException(String code, Throwable exception, String message, Response.Status httpStatus) {
+        super(message, exception);
+        this.httpStatus = httpStatus;
+        this.errorDetail = ErrorDto.builder()
+            .origin(ErrorOrigin.OWN)
+            .code(code)
+            .message(message)
+            .build();
+    }
 }
