@@ -1,19 +1,15 @@
 package com.demo.commons.properties;
 
-import com.demo.commons.properties.logging.LoggingTemplate;
-import com.demo.commons.properties.restclient.RestClient;
-
-import java.util.Map;
-import java.util.Optional;
+import com.demo.commons.properties.error.ErrorProperties;
+import com.demo.commons.properties.rest.RestProperties;
+import io.smallrye.config.WithDefault;
 
 public interface ConfigurationBaseProperties {
 
-  Optional<ProjectType> projectType();
+  @WithDefault("BACKEND")
+  ProjectType projectType();
 
-  Optional<LoggingTemplate> logging();
+  ErrorProperties error();
 
-  Map<String, String> errorMessages();
-
-  Map<String, RestClient> restClients();
-
+  RestProperties rest();
 }

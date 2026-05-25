@@ -1,5 +1,8 @@
 package com.demo.commons.properties;
 
 public enum ProjectType {
-  BFF,MS
+
+  BACKEND_FOR_FRONTEND,
+  BACKEND
+
 }

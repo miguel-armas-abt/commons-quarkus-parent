@@ -1,8 +1,9 @@
 package com.demo.commons.validations;
 
-import com.demo.commons.constants.Symbol;
-import com.demo.commons.errors.exceptions.InvalidFieldException;
+import com.demo.commons.constants.Strings;
+import com.demo.commons.error.exceptions.InvalidFieldException;
 import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@ApplicationScoped
 @RequiredArgsConstructor
 public class BodyValidator {
 
@@ -21,7 +23,7 @@ public class BodyValidator {
       String errorMessages = violations.stream()
           .map(v -> String.format("The value of %s %s",
               v.getPropertyPath(), v.getMessage()))
-          .collect(Collectors.joining(Symbol.COMMA));
+          .collect(Collectors.joining(Strings.COMMA));
       return Uni.createFrom().failure(new InvalidFieldException(errorMessages));
     }
     return Uni.createFrom().item(body);
