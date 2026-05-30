@@ -10,6 +10,7 @@
 
   <modules>
     <module>commons-quarkus</module>
+    <module>openapi-generated-resource-patcher-maven-plugin</module>
   </modules>
 
   <properties>
@@ -20,13 +21,14 @@
 
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.12.0</quarkus.platform.version>
+    <quarkus.platform.version>3.33.2</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
 
-    <mapstruct.version>1.6.0.Beta1</mapstruct.version>
-    <lombok.version>1.18.26</lombok.version>
+    <mapstruct.version>1.6.3</mapstruct.version>
+    <lombok.version>1.18.38</lombok.version>
     <jandex.maven.plugin.version>3.4.0</jandex.maven.plugin.version>
+    <commons-lang3.version>3.20.0</commons-lang3.version>
   </properties>
 
   <dependencyManagement>
@@ -118,7 +120,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.11</version>
+      <version>${commons-lang3.version}</version>
     </dependency>
 
     <!-- unit tests -->
@@ -193,9 +195,14 @@
         <artifactId>jandex-maven-plugin</artifactId>
         <version>${jandex.maven.plugin.version}</version>
         <executions>
-          <execution><goals><goal>jandex</goal></goals></execution>
+          <execution>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
+          </execution>
         </executions>
-        <configuration><indexVersion>12</indexVersion>
+        <configuration>
+          <indexVersion>12</indexVersion>
           <jar/>
         </configuration>
       </plugin>
@@ -223,7 +230,8 @@
 
         <quarkus.native.enabled>true</quarkus.native.enabled> <!-- enable native-image build -->
         <quarkus.native.sources-only>false</quarkus.native.sources-only> <!-- include native artifacts -->
-        <quarkus.native.container-build>true</quarkus.native.container-build> <!-- generate a Linux ELF binary instead of a Windows .exe -->
+        <quarkus.native.container-build>true
+        </quarkus.native.container-build> <!-- generate a Linux ELF binary instead of a Windows .exe -->
 
         <quarkus.package.jar.user-configured-ignored-entries>
           META-INF/maven/org.jctools/jctools-core/pom.xml,
